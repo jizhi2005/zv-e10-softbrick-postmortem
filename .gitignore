@@ -1,0 +1,5 @@
+*.b64
+*.img
+*.bin
+__pycache__/
+.venv/
