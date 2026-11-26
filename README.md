@@ -29,6 +29,10 @@
 > **已向上游提问，欢迎跟进 / upstream issues opened:**
 > - [cokeenet/zve10-qemu#5](https://github.com/cokeenet/zve10-qemu/issues/5) —— 那次真机成功时用的**确切接法与相机状态**
 > - [dino2048/zv-e10-toolkit#8](https://github.com/dino2048/zv-e10-toolkit/issues/8) —— 文档里的 A7/A6 接线**是否真机验证过，还是继承自 qemu-ref**
+> - [DavidBuchanan314/ILCE-7M4-RE#4](https://github.com/DavidBuchanan314/ILCE-7M4-RE/issues/4) —— 无 Multi 口的机身上，**BootROM 是否需要 boot-mode strap 才会采样 `BOOT_SERIAL_IN`**
+> - [ma1co/Sony-PMCA-RE#768](https://github.com/ma1co/Sony-PMCA-RE/issues/768) —— Senser(`054C:0336`) **是否存在主机侧触发**，还是只能由相机内部发起
+>
+> 给维修圈的中文帖子（求 `SY-1121` 点位图）：[`docs/给维修圈的中文帖.md`](docs/给维修圈的中文帖.md)
 >
 > ### 🤖 如果你是 AI agent，请先读 [`AGENTS.md`](AGENTS.md)
 >
