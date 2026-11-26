@@ -67,6 +67,11 @@
     "HDMI CEC / hot shoe / mic / headphone",
     "direct eMMC access / JTAG (BGA, requires soldering)"
   ],
+  "upstream_reference": {
+    "success_record": "cokeenet/zve10-qemu fastboot/docs/usb-success.md, 2026-10-22 (18d1:4ee0, getvar:version -> OKAY 0.4)",
+    "different_physical_unit": true,
+    "note": "The documented success was achieved on the upstream project's own camera (GitHub user qn06142), not on this unit. Same model, different individual, so the internal board routing may differ."
+  },
   "open_question": "What physical access makes the ZV-E10 gen 1 accept a write (BootROM serial entry, boot-mode strap, or a loader write path)?",
   "help_needed": [
     "ZV-E10 SY-1121 boardview / test point photos (BOOT_SERIAL_IN = BGA G18/L19; straps N8/P4/AL24; XRESET_REQ = L11)",

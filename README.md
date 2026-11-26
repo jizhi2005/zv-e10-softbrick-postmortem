@@ -165,6 +165,9 @@ PC 侧用 Sony-PMCA-RE 即可拿到 root shell。
 上游有成功记录（`cokeenet/zve10-qemu` 的 `fastboot/docs/usb-success.md`，2026-10-22）：
 注入 `fastboot.bin` 后枚举 `18d1:4ee0`，`getvar:version -> OKAY 0.4`。
 
+> ⚠️ **那条记录属于另一台物理机器**（该项目的用户 `qn06142`，据其文档有 USB-C 全针引出板
+> 与示波器）。我们这台是**另一台相机**，同型号、不同个体。这一点很关键，见下表最后一行。
+
 | 项目 | 上游 | 本机 | 一致？ |
 |---|---|---|---|
 | 机型 / SoC | ZV-E10 gen1 / CXD90045 | 同 | ✅ |
