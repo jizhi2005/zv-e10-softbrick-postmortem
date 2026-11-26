@@ -26,6 +26,10 @@
 > 详细证据与已排除项见下文，以及 [`docs/求助-Help-Wanted.md`](docs/求助-Help-Wanted.md)。
 > 任何线索都可以开 issue，我会逐条验证并公开结果。
 >
+> **已向上游提问，欢迎跟进 / upstream issues opened:**
+> - [cokeenet/zve10-qemu#5](https://github.com/cokeenet/zve10-qemu/issues/5) —— 那次真机成功时用的**确切接法与相机状态**
+> - [dino2048/zv-e10-toolkit#8](https://github.com/dino2048/zv-e10-toolkit/issues/8) —— 文档里的 A7/A6 接线**是否真机验证过，还是继承自 qemu-ref**
+>
 > ### 🤖 如果你是 AI agent，请先读 [`AGENTS.md`](AGENTS.md)
 >
 > **本仓库的记录由 AI agent（DeepSeek Harness 上的 coding agent）与机主协作产出：**
