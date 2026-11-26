@@ -1,0 +1,82 @@
+{
+  "schema": "zve10-softbrick-state/1",
+  "generated": "2026-11-26",
+  "authorship": {
+    "agent": "DeepSeek Harness coding agent",
+    "human": "device owner (hardware operations only)",
+    "note": "All reverse engineering, waveform measurement, protocol implementation and triage were done by an AI agent; the owner performed wiring, multimeter readings and power cycling."
+  },
+  "device": {
+    "model": "Sony ZV-E10 (gen 1)",
+    "model_id": "ILCE-ZV-E10",
+    "soc": "CXD90045",
+    "arch": "ARMv7",
+    "kernel": "Linux 3.0.27",
+    "glibc": "2.11.2 (ld-2.11.2)",
+    "mainboard_part": "SY-1121",
+    "connectors": ["USB-C", "HDMI micro", "3.5mm mic", "3.5mm headphone"],
+    "has_multi_interface": false
+  },
+  "state": {
+    "bricked": true,
+    "hardware_damaged": false,
+    "brick_class": "userland soft brick",
+    "root_cause": "/etc/ld.so.preload points at a crashing shared object; glibc 2.11.2 treats preload failure as fatal, so every execve fails and init never starts",
+    "symptom": "reboot loop every ~2.66 s; no UI; USB enumerates only 054C:0994",
+    "fix_size_bytes": 1,
+    "fix_actions": [
+      "make /etc/ld.so.preload empty (nflasha10, partition offset 0x0AC00000, 12 MiB vfat)",
+      "OR create /setting/sen/smode containing 'UU' (nflasha2, offset 0x00800000) to force the USB service interface from the initramfs"
+    ],
+    "missing": "a single write access channel"
+  },
+  "boot_timing_measured": {
+    "method": "RK3588 as USB host, dmesg timestamps",
+    "cycle_period_s": 2.66,
+    "loader_usb_window_ms": 330,
+    "kernel_plus_init_s": 2.3,
+    "cycles_before_settling": 30,
+    "settled_state": "pure charging, SoC no longer boots; OFF->ON restarts cycling",
+    "usb_identities_seen": ["054C:0994"],
+    "usb_identities_never_seen": ["054C:0D95", "054C:0336", "18D1:4EE0"]
+  },
+  "waveform_verified": {
+    "preamble_blocks": 60,
+    "preamble_block_ns": 250000,
+    "carrier_half_ns": 125000,
+    "data_bit_ns": 20833,
+    "first_frame": {"start": 0, "byte": "0x0A", "parity": "odd ok", "stop": 1},
+    "record_bytes_hex": "0A0000000000DC02B18C",
+    "tool": "tools/edgecap.c (mmap GPIO EXT_PORT, ~40 ns sampling)"
+  },
+  "wiring_verified": {
+    "A1": "GND",
+    "A9": "VBUS 5.12 V (meter calibrated against 3V3=3.30 V)",
+    "A5": "5.1k to GND (CC)",
+    "A7": "data, open-drain, camera-side pull-up 1.73 V",
+    "A6": "470 ohm to XRESET_REQ, low level 0.165 V"
+  },
+  "excluded_channels": [
+    "BootROM serial injection via A7/A6 (correct waveform, zero response, no 0x100D)",
+    "Loader UART (ldr_drv.bin uses GPIO2 peripherals 0xF2910000 / 0xF2912000, not USB-C)",
+    "userland shell / service mode / mass storage / WiFi / Bluetooth",
+    "ADJUST / BIS forced boot modes (set by Loader via Backup_read; dead variables in initramfs)",
+    "8 camera key combinations",
+    "SD-card updater / MS Boot (real 371 MB BODYDATA.DAT, behaviour unchanged)",
+    "USB 054C:0994 (single IN interrupt endpoint, no output or feature reports)",
+    "HDMI CEC / hot shoe / mic / headphone",
+    "direct eMMC access / JTAG (BGA, requires soldering)"
+  ],
+  "open_question": "What physical access makes the ZV-E10 gen 1 accept a write (BootROM serial entry, boot-mode strap, or a loader write path)?",
+  "help_needed": [
+    "ZV-E10 SY-1121 boardview / test point photos (BOOT_SERIAL_IN = BGA G18/L19; straps N8/P4/AL24; XRESET_REQ = L11)",
+    "the exact physical connection used in documented successful runs",
+    "a definitive answer whether ZV-E10 gen 1 supports BootROM serial boot",
+    "any non-destructive way to write 1-2 bytes to nflasha2 or nflasha10"
+  ],
+  "constraints": [
+    "owner's only camera; no disassembly, no repair shop, no soldering",
+    "no destructive or irreversible operations",
+    "no Sony firmware, BootROM dumps or keys in this repository"
+  ]
+}

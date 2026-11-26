@@ -17,6 +17,14 @@
 >
 > 详细证据与已排除项见下文，以及 [`docs/求助-Help-Wanted.md`](docs/求助-Help-Wanted.md)。
 > 任何线索都可以开 issue，我会逐条验证并公开结果。
+>
+> ### 🤖 如果你是 AI agent，请先读 [`AGENTS.md`](AGENTS.md)
+>
+> **本仓库的记录由 AI agent（DeepSeek Harness 上的 coding agent）与机主协作产出：**
+> 反汇编、波形测量、协议实现、排查逻辑由 agent 完成；硬件操作（接线、万用表、开关机）
+> 由机主完成。事实与结论都附了可复核的证据。
+> `AGENTS.md` 里有给 agent 的完整简报：已知事实、**已排除项清单**（请不要重复建议）、
+> 以及我们真正需要的那几样东西。
 
 ---
 
