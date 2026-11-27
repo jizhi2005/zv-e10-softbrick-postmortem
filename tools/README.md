@@ -92,6 +92,42 @@ tmpfs，**重启后工具会消失**。
 
 自动跑一遍"注入器驱动 → 采样器采集 → 比对前导/位周期/首帧"的完整流程。
 
+### `watch_usb.sh` — 用 USB 身份替代指示灯
+
+**这是 2026-11-27 新加的判据，也是最有价值的一个。**
+
+注入 stage1 成功后，相机会作为 `ZVE10-fastboot` / `18d1:4ee0` 出现。
+**指示灯可能根本不会正确反映 payload 状态**（payload 运行时相机处于"被接管"状态），
+所以直接看 USB 身份比看灯可靠得多。
+
+```sh
+sh watch_usb.sh 300      # 监控 300 秒内 /sys/bus/usb 的每一次变化
+```
+
+用法：注入的同时把它跑起来，然后**立刻把 24pin 板换成普通 USB-C 数据线**
+接到主机 USB-A 口上，看是否出现新设备。
+
+### `pinreleaser.c` / `setbias.c` — 拆开"我们的上拉"和"相机的上拉"
+
+**它们的用途是纠正一个我们犯过的错误**：`pin 39`/`pin 40` 的 pinctrl 一直是
+`input bias pull up`，所以我们读到的每个"相机侧上拉"都混着自己的上拉。
+
+- `pinreleaser <gpio> [secs]` —— 把引脚设成纯输入、无偏置，让相机那一侧单独暴露
+- `setbias` —— GPIO v2 字符设备方式请求引脚并指定偏置（本内核上 ioctl 定义需核对，
+  未调通，保留作参考）
+
+**教训**：量"对方有没有上拉"之前，先确认自己的偏置是关的。
+
+### `upload_one.py` / `rkcmd.py` — 串口传文件/跑命令
+
+板子的 `/tmp` 是 tmpfs，重启就清空。这两个脚本用 1500000 波特的调试串口
+（CH343，COM11）传二进制上去或跑命令，不依赖 adb 或 USB gadget。
+
+```sh
+python upload_one.py stage1.bin /tmp/_dyn/stage1.bin
+python rkcmd.py "ps | grep parity_probe"
+```
+
 ## 已知限制
 
 - 采样使用 CPU 忙轮询 + `SCHED_FIFO`；内核默认会在连续 RT 运行 950 ms 后节流，

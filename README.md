@@ -24,15 +24,14 @@
 > 3. 或者明确指出：**ZV-E10 一代究竟支不支持 BootROM 串口启动**
 >
 > 详细证据与已排除项见下文，以及 [`docs/求助-Help-Wanted.md`](docs/求助-Help-Wanted.md)。
-> 任何线索都可以开 issue，我会逐条验证并公开结果。
+> **2026-11-27 的新一轮实验与结论（含推翻的旧结论）：[`docs/2026-11-27-新增证据.md`](docs/2026-11-27-新增证据.md)**
 >
-> **已向上游提问，欢迎跟进 / upstream issues opened:**
+> **已向上游提问 / upstream issues opened:**
 > - [cokeenet/zve10-qemu#5](https://github.com/cokeenet/zve10-qemu/issues/5) —— 那次真机成功时用的**确切接法与相机状态**
-> - [dino2048/zv-e10-toolkit#8](https://github.com/dino2048/zv-e10-toolkit/issues/8) —— 文档里的 A7/A6 接线**是否真机验证过，还是继承自 qemu-ref**
-> - [DavidBuchanan314/ILCE-7M4-RE#4](https://github.com/DavidBuchanan314/ILCE-7M4-RE/issues/4) —— 无 Multi 口的机身上，**BootROM 是否需要 boot-mode strap 才会采样 `BOOT_SERIAL_IN`**
-> - [ma1co/Sony-PMCA-RE#768](https://github.com/ma1co/Sony-PMCA-RE/issues/768) —— Senser(`054C:0336`) **是否存在主机侧触发**，还是只能由相机内部发起
->
-> 给维修圈的中文帖子（求 `SY-1121` 点位图）：[`docs/给维修圈的中文帖.md`](docs/给维修圈的中文帖.md)
+> - [dino2048/zv-e10-toolkit#8](https://github.com/dino2048/zv-e10-toolkit/issues/8) —— 文档里的 A7/A6 接线**是否真机验证过**
+>   → **已回复**：他在自己的 ZV-E10 gen1 上验证过，电脑识别为 `ZVE10-fastboot`，并响应 fastboot 查询
+> - [DavidBuchanan314/ILCE-7M4-RE#4](https://github.com/DavidBuchanan314/ILCE-7M4-RE/issues/4) —— 无 Multi 口的机身上，**BootROM 是否需要 boot-mode strap** → 回复指向该仓库 issue #3
+> - [ma1co/Sony-PMCA-RE#768](https://github.com/ma1co/Sony-PMCA-RE/issues/768) —— Senser(`054C:0336`) **是否存在主机侧触发** → 暂无回复
 >
 > ### 🤖 如果你是 AI agent，请先读 [`AGENTS.md`](AGENTS.md)
 >
@@ -47,8 +46,11 @@
 > 一台 Sony ZV-E10（ILCE-ZV-E10，SoC CXD90045）因 `/etc/ld.so.preload` 指向一个崩溃的注入库而进入开机重启循环。
 > 本仓库记录完整的故障机制、可复现的修复路径、以及一次穷尽式排查的全部证据。
 >
-> 日期：2026-11-19 砖机 / 2026-11-26 排查
+> 日期：2026-11-19 砖机 / 2026-11-26～27 排查
 > 状态：**未修复**（缺一次写入通道，见"剩余缺口"）
+>
+> ⚠️ **注意：`2026-11-27` 那轮排查修正了本文档里的三条结论**（万用表倍数、A7 上拉来源、D−=0 的解释），
+> 细节见 [`docs/2026-11-27-新增证据.md`](docs/2026-11-27-新增证据.md) 第一节。
 
 ---
 
@@ -173,8 +175,8 @@ PC 侧用 Sony-PMCA-RE 即可拿到 root shell。
 | 机型 / SoC | ZV-E10 gen1 / CXD90045 | 同 | ✅ |
 | 数据脚 | GP28 → A7（开漏，无串阻） | gpio → A7（开漏，无串阻） | ✅ |
 | 复位脚 | GP27 → 470Ω → A6（10 µs 低脉冲） | 470Ω → A6（10 µs，实测 0.165 V 合法低） | ✅ |
-| CC / VBUS / GND | 5.1k / 5.0 V / 共地 | 5.1k / **5.12 V**（电表校准后）/ 共地 | ✅ |
-| 相机侧电平 | ~1.8 V | **1.73 V** | ✅ |
+| CC / VBUS / GND | 5.1k / 5.0 V / 共地 | 5.1k / 5.15 V（表读 7.8 V ÷ 1.515）/ 共地 | ✅ |
+| 相机侧电平 | ~1.8 V | ⚠️ **未测准**——见下方注 | ❓ |
 | 波形 | PIO：60×250 µs、125 µs、20.833 µs | **实测逐项一致** | ✅ |
 | 记录序列与内容 | `SET_UNLOCK → MEM_WRITE×N → SET_ENTRY → SET_UNLOCK` | 逐字节解出相同 | ✅ |
 | 主控 | RP2040（PIO+DMA 硬件时序） | RK3588 / ESP32（软件时序，已实测等价） | ⚠️ |
@@ -202,7 +204,10 @@ PC 侧用 Sony-PMCA-RE 即可拿到 root shell。
 - BGA 拆焊 + 编程器（风险最高）
 - 维修点用索尼工厂工具（"基板制作"）
 
-主板料号：**SY-1121**（可用它在维修圈找点位图/boardview）。
+主板料号：**SY-1121**。
+
+> 机主明确表示**不打算联系维修圈、不送修、不拆机**。
+> 这些路径记录在此是为了说明"还剩什么"，不代表会被执行。
 
 ---
 
@@ -230,8 +235,9 @@ PC 侧用 Sony-PMCA-RE 即可拿到 root shell。
 4. **软件移植必须核常量。** 本项目的 ESP32 移植版把前导高电平写成 23 周期
    （239.6 µs），而 PIO 原件是 `set pindirs,0 [22]`(23) + `jmp`(1) = **24 周期 = 250.0 µs**；
    60 个前导边沿全长错 4.2%。记录间隔也曾是 2 ms（上游 14.4 ms）。
-5. **先校准仪表。** 本项目用的万用表电压档偏高 21%（3V3 读 4.0 V），
-   差点把正常的 5.12 V VBUS 误判成 6.2 V 超压。
+5. **先校准仪表。** 本项目用的万用表电压档**偏高 51.5%**（3V3 脚真值 3.30 V 读成 5.0 V，
+   5V 脚真值 5.15 V 读成 7.8 V）。换算：真值 = 表读 ÷ 1.515。
+   ⚠️ 早期记录里写的"偏高 21%"是错的，据此算出的电压值都不可靠。
 
 ---
 
