@@ -1,6 +1,16 @@
 {
   "schema": "zve10-softbrick-state/1",
-  "generated": "2026-11-26",
+  "generated": "2026-11-27",
+  "firmware": {
+    "body_firmware": "30110_06.2026060501",
+    "body_firmware_system": "2.03",
+    "body_firmware_evidence": "version string found at offset 0x26240 in firmware.fdat; owner confirms the body was updated to 2.03",
+    "upstream_validated_firmware": "30110_05.2025031501",
+    "upstream_validated_system": "2.02",
+    "note": "Every fastboot/BootROM success in dino2048/zv-e10-toolkit is tied to 2.02 (30110_05). No 2.03 BootROM/fastboot success record exists in that repo. Upstream also built a separate 'Jiritsu' backend for 2.03 because the legacy terminal protocol fails there (FileControl returns 0x80). Whether 2.03 closed the BootROM serial entry is NOT yet confirmed - asked upstream directly.",
+    "probable_root_cause": "firmware 2.03 vs 2.02 behaviour change at the BootROM serial-entry gate",
+    "confirmed_at_issue": "https://github.com/dino2048/zv-e10-toolkit/issues/8#issuecomment-7220609429"
+  },
   "authorship": {
     "agent": "DeepSeek Harness coding agent",
     "human": "device owner (hardware operations only)",
@@ -51,13 +61,15 @@
   },
   "wiring_verified": {
     "A1": "GND",
-    "A9": "VBUS 5.12 V (meter calibrated against 3V3=3.30 V)",
-    "A5": "5.1k to GND (CC)",
-    "A7": "data, open-drain, camera-side pull-up 1.73 V",
-    "A6": "470 ohm to XRESET_REQ, low level 0.165 V"
+    "A9": "VBUS 5.15 V (true value; meter reads 7.8 V, meter is 51.5% high, NOT 21%)",
+    "A5": "5.1k to GND (CC1), A5 ~0 V",
+    "B5": "tied to the A5 node, so CC2 is also pulled through the same 5.1k (DAM condition), B5 ~0 V",
+    "A7": "data, open-drain, no series resistor; path drop measured ~0 V",
+    "A6": "470 ohm to XRESET_REQ; path drop ~0 V",
+    "correction": "Earlier claims of 'camera-side pull-up 1.73 V' are NOT reliable: pinctrl showed gpio1-7/gpio1-8 held 'input bias pull up', so our own bias was in the reading."
   },
   "excluded_channels": [
-    "BootROM serial injection via A7/A6 (correct waveform, zero response, no 0x100D)",
+    "BootROM serial injection via A7/A6 (correct waveform, zero response, no 0x100D) - on firmware 2.03 this layer may simply not be reachable; see firmware section",
     "Loader UART (ldr_drv.bin uses GPIO2 peripherals 0xF2910000 / 0xF2912000, not USB-C)",
     "userland shell / service mode / mass storage / WiFi / Bluetooth",
     "ADJUST / BIS forced boot modes (set by Loader via Backup_read; dead variables in initramfs)",
@@ -67,16 +79,27 @@
     "HDMI CEC / hot shoe / mic / headphone",
     "direct eMMC access / JTAG (BGA, requires soldering)"
   ],
+  "experiments_2026_11_27": [
+    "plug flipped 180 degrees (equivalent to using B7/B6 because a 16-pin receptacle bridges A7 and B7): no response",
+    "isolated measurement with our wires removed (camera side only): results inconsistent between runs, marked unreliable",
+    "nanosecond sampling of D- for 18 s: 0 transitions (proves the camera never drives the idle line, NOT that the pin is disconnected)",
+    "USB-identity criterion: inject official stage1, swap to a plain USB-C data cable, watch /sys/bus/usb -> only 054c:0994, never ZVE10-fastboot or 18d1:4ee0"
+  ],
+  "corrections_2026_11_27": [
+    "multimeter reads 51.5% high, not 21% (3V3 true 3.30 V read as 5.0 V; 5V true 5.15 V read as 7.8 V); true = reading / 1.515",
+    "earlier 'camera-side pull-up 1.73 V' is not established: our own gpio bias was enabled",
+    "one whole round of 'D- = 0 V so the wire is broken' was wrong: the probe was driving the line at the time"
+  ],
   "upstream_reference": {
     "success_record": "cokeenet/zve10-qemu fastboot/docs/usb-success.md, 2026-10-22 (18d1:4ee0, getvar:version -> OKAY 0.4)",
     "different_physical_unit": true,
-    "note": "The documented success was achieved on the upstream project's own camera (GitHub user qn06142), not on this unit. Same model, different individual, so the internal board routing may differ."
+    "note": "The documented success was achieved on the upstream project's own camera (GitHub user qn06142), not on this unit. But firmware difference is now the stronger explanation: that camera was on 2.02, this one is on 2.03."
   },
-  "open_question": "What physical access makes the ZV-E10 gen 1 accept a write (BootROM serial entry, boot-mode strap, or a loader write path)?",
+  "open_question": "Has BootROM serial injection ever worked on firmware 2.03 (30110_06.2026060501)? Asked upstream: https://github.com/dino2048/zv-e10-toolkit/issues/8#issuecomment-7220609429",
   "help_needed": [
+    "a definitive answer whether BootROM serial entry is reachable on firmware 2.03 (30110_06), or only on 2.02 (30110_05)",
     "ZV-E10 SY-1121 boardview / test point photos (BOOT_SERIAL_IN = BGA G18/L19; straps N8/P4/AL24; XRESET_REQ = L11)",
-    "the exact physical connection used in documented successful runs",
-    "a definitive answer whether ZV-E10 gen 1 supports BootROM serial boot",
+    "whether a 2.02 downgrade is possible without working userland",
     "any non-destructive way to write 1-2 bytes to nflasha2 or nflasha10"
   ],
   "constraints": [
